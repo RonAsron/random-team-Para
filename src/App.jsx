@@ -3,27 +3,29 @@ import WheelCanvas from "./components/WheelCanvas";
 import GroupTable from "./components/GroupTable";
 import { Button } from "./components/ui/button";
 import "./App.css";
-import "./index.css"; // ต้องมี @tailwind ... อยู่ข้างใน
+import "./index.css";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import backgroundImage from "./assets/bg-5.jpg";
 
 const groupNames = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
 const initialTeams = [
   "PATROL AIRPORT",
   "บ้านๆในหม้อง",
-  "asron testtool",
+  "น้องนาทีXบ้านแขก​",
   "The first​ one​ JR​",
   "NONGEVALIN FC",
   "สุรินคำ​ FC​",
   "แบมบูFC",
   "ช.ชนาธิป​",
-  "บังแมนบางโรง​",
-  "บังซีดบางโรง​",
+  "วัยรุ่นป่าคลอก",
+  "เลดเดอร์​ อันดามัน​",
   "ทีมพี่บ่าว​ สนามบิน​",
   "น้องบอล​",
   "TIGER JUNIOR​ ACADEMY​ A​",
   "TIGER JUNIOR ACADEMY B",
-  "TIGER JUNIOR ACADEMY C",
+  "ป.อารียา",
   "น้องอัสรอน​",
   "รวมเพื่อน53",
   "ปางช้างA​",
@@ -38,7 +40,7 @@ const initialTeams = [
   "กองทุนแม่บ้านพาราA",
   "กองทุนแม่บ้านพาราB",
   "ฒ.ผู้เฒ่าทีม​",
-  "กะเลยทุย",
+  "ชายทั้งแท่ง",
   "น้องเอมิร่า​",
   "วัยรุ่น​รางน้ำบางโรง​",
   "วัยรุ่นน้ำแข็งบางโรงxควันหลง​",
@@ -56,8 +58,21 @@ const initialTeams = [
   "ทีมขายาว",
   "ทีเด็ดบางโรง1",
   "ทีเด็ดบางโรง2",
-  "สมพาน",
+  "สมภาร"
 ];
+
+// ระบุกลุ่มที่บังคับให้ทีมอยู่
+const lockedTeams = {
+  "น้องบอล​": "G",
+  "น้องเอมิร่า​": "H"
+  
+};
+
+// รอบที่บังคับให้ทีมออก
+const lockedSchedule = {
+  37: "น้องบอล​",
+  43: "น้องเอมิร่า​"
+};
 
 const shuffle = (array) => {
   const arr = [...array];
@@ -68,11 +83,11 @@ const shuffle = (array) => {
   return arr;
 };
 
-const findAvailableGroup = (groups, teamName, maxGroupSize = 6) =>
-  groups.findIndex((g) => g.length < maxGroupSize && !g.includes(teamName));
-
 function App() {
-  const [teams, setTeams] = useState(initialTeams);
+  // แยกทีมล็อกออกจาก teams ปกติ
+const [teams, setTeams] = useState(initialTeams.filter(t => !lockedTeams[t]));
+const [pendingLocked, setPendingLocked] = useState(Object.keys(lockedTeams));
+
   const [groups, setGroups] = useState(groupNames.map(() => []));
   const [spinning, setSpinning] = useState(false);
   const [currentAngle, setCurrentAngle] = useState(0);
@@ -80,178 +95,177 @@ function App() {
   const [done, setDone] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const groupTableRef = useRef(null);
-
   const popupTimeout = useRef(null);
-const handleSaveImage = () => {
-  if (!groupTableRef.current) return;
-  html2canvas(groupTableRef.current).then((canvas) => {
-    const link = document.createElement("a");
-    link.download = "group-result.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  });
+const [spinCount, setSpinCount] = useState(0);
+
+const findAvailableGroup = (groups, teamName, maxGroupSize = 6) => {
+  if (lockedTeams[teamName]) {
+    const idx = groupNames.indexOf(lockedTeams[teamName]);
+    return groups[idx]?.length < maxGroupSize ? idx : -1;
+  }
+  return groups.findIndex((g) => g.length < maxGroupSize && !g.includes(teamName));
 };
 
 
-  const handleSavePdf = () => {
-    const doc = new jsPDF();
-
-    doc.setFontSize(18);
-    doc.text("ผลการจับทีม", 14, 22);
-
-    const startX = 14;
-    let startY = 32;
-    const lineHeight = 10;
-
-    groups.forEach((group, idx) => {
-      doc.setFontSize(14);
-      doc.text(`Group ${groupNames[idx]}:`, startX, startY);
-      startY += lineHeight;
-
-      if (group.length === 0) {
-        doc.setFontSize(12);
-        doc.text("ไม่มีทีม", startX + 10, startY);
-        startY += lineHeight;
-      } else {
-        group.forEach((team) => {
-          doc.setFontSize(12);
-          doc.text(`- ${team}`, startX + 10, startY);
-          startY += lineHeight;
-        });
-      }
-      startY += lineHeight / 2;
-
-      // ถ้าใกล้สุดหน้ากระดาษ ขึ้นหน้าใหม่
-      if (startY > 270) {
-        doc.addPage();
-        startY = 20;
-      }
+  const handleSaveImage = () => {
+    if (!groupTableRef.current) return;
+    html2canvas(groupTableRef.current, { scale: 2 }).then((canvas) => {
+      const link = document.createElement("a");
+      link.download = "group-result.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
     });
+  };
 
-    doc.save("group-result.pdf");
+  const handleSavePdf = () => {
+    if (!groupTableRef.current) return;
+    html2canvas(groupTableRef.current, { scale: 2 }).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "pt",
+        format: [canvas.width, canvas.height],
+      });
+
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+      pdf.save("group-result.pdf");
+    });
   };
 
   const handleAutoDraw = () => {
-    const shuffled = shuffle(teams);
+    let allTeams = [...teams, ...pendingLocked]; // รวมทีมล็อกเข้าด้วย
+    const shuffled = shuffle(allTeams);
     const newGroups = groupNames.map(() => []);
     const groupSize = Math.ceil(shuffled.length / groupNames.length);
 
     for (const team of shuffled) {
-      for (let i = 0; i < groupNames.length; i++) {
-        if (newGroups[i].length < groupSize && !newGroups[i].includes(team)) {
-          newGroups[i].push(team);
-          break;
-        }
+      const groupIdx = findAvailableGroup(newGroups, team, groupSize);
+      if (groupIdx !== -1) {
+        newGroups[groupIdx].push(team);
       }
     }
 
     setGroups(newGroups);
     setTeams([]);
+    setPendingLocked([]);
     setLastTeam(null);
     setDone(true);
   };
 
   const handleReset = () => {
-    setTeams(initialTeams);
+    setTeams(initialTeams.filter(t => !lockedTeams[t]));
+    setPendingLocked(Object.keys(lockedTeams));
     setGroups(groupNames.map(() => []));
     setSpinning(false);
     setCurrentAngle(0);
     setLastTeam(null);
     setDone(false);
     setShowPopup(false);
-
     if (popupTimeout.current) clearTimeout(popupTimeout.current);
   };
 
-  const handleSpin = () => {
-    if (teams.length === 0 || spinning) return;
+const handleSpin = () => {
+  if (teams.length === 0 && pendingLocked.length === 0) return;
+  if (spinning) return;
 
-    const availableTeams = teams.filter(
-      (team) => findAvailableGroup(groups, team) !== -1
-    );
+  const nextSpin = spinCount + 1;
+  setSpinCount(nextSpin);
 
-    if (availableTeams.length === 0) {
-      setSpinning(false);
-      setDone(true);
-      return;
-    }
+  let winnerName;
 
-    setSpinning(true);
-
+  // ถ้ารอบนี้เป็นรอบล็อก
+  if (lockedSchedule[nextSpin]) {
+    winnerName = lockedSchedule[nextSpin];
+    // ลบออกจาก pendingLocked ถ้ามี
+    setPendingLocked(prev => prev.filter(t => t !== winnerName));
+  } else {
+    // สุ่มปกติจากทีมที่เหลือ
+    const availableTeams = [...teams];
     const winnerIndex = Math.floor(Math.random() * availableTeams.length);
-    const winnerName = availableTeams[winnerIndex];
-    const segmentAngle = 360 / availableTeams.length;
-    const pointerAngle = 90;
+    winnerName = availableTeams[winnerIndex];
+  }
 
-    const totalSpins = Math.floor(Math.random() * 5) + 6; // 6-10 รอบ
-    const finalAngle =
-      360 * totalSpins +
-      pointerAngle -
-      (winnerIndex * segmentAngle + segmentAngle / 2);
+  setSpinning(true);
 
-    const duration = Math.floor(Math.random() * 1500) + 3500; // 3500-5000 ms
+  // คำนวณมุมเพื่อให้ไปหยุดที่ winnerName
+  const allNames = [...teams, ...pendingLocked].filter(
+    (t) => t === winnerName || (!lockedSchedule[nextSpin] && !lockedTeams[t])
+  );
+  const winnerIndex = allNames.indexOf(winnerName);
+  const segmentAngle = 360 / allNames.length;
+  const pointerAngle = 0;
+  const totalSpins = Math.floor(Math.random() * 2) + 3;
+  const finalAngle =
+    360 * totalSpins +
+    pointerAngle +
+    90 -
+    (winnerIndex * segmentAngle + segmentAngle / 2);
 
-    const start = performance.now();
+  const duration = Math.floor(Math.random() * 500) + 1000;
+  const start = performance.now();
 
-    const easeInOutCubic = (t) =>
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const easeInOutCubic = (t) =>
+    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-    const animate = (now) => {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const easedProgress = easeInOutCubic(progress);
+  const animate = (now) => {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const easedProgress = easeInOutCubic(progress);
+    const angle = easedProgress * finalAngle;
+    setCurrentAngle(angle % 360);
 
-      const angle = easedProgress * finalAngle;
-      setCurrentAngle(angle % 360);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        const groupIdx = findAvailableGroup(groups, winnerName);
-
-        if (groupIdx !== -1) {
-          const newGroups = groups.map((g, i) =>
-            i === groupIdx ? [...g, winnerName] : g
-          );
-          setGroups(newGroups);
-        }
-
-        const newTeams = teams.filter((t) => t !== winnerName);
-        setTeams(newTeams);
-        setLastTeam(winnerName);
-
-        setShowPopup(true);
-        if (popupTimeout.current) clearTimeout(popupTimeout.current);
-        popupTimeout.current = setTimeout(() => setShowPopup(false), 1500);
-
-        setSpinning(false);
-        if (newTeams.length === 0) setDone(true);
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      const groupIdx = findAvailableGroup(groups, winnerName);
+      if (groupIdx !== -1) {
+        const newGroups = groups.map((g, i) =>
+          i === groupIdx ? [...g, winnerName] : g
+        );
+        setGroups(newGroups);
       }
-    };
 
-    requestAnimationFrame(animate);
+      if (!lockedTeams[winnerName]) {
+        setTeams((prev) => prev.filter((t) => t !== winnerName));
+      }
+
+      setLastTeam(winnerName);
+      setShowPopup(true);
+      if (popupTimeout.current) clearTimeout(popupTimeout.current);
+      popupTimeout.current = setTimeout(() => setShowPopup(false), 1500);
+
+      setSpinning(false);
+      if (teams.length === 0 && pendingLocked.length === 0) setDone(true);
+    }
   };
 
-  // ฟังก์ชันบันทึกผลกลุ่มทีมเป็นไฟล์ JSON
-  const handleSave = () => {
-    const dataStr = JSON.stringify(groups, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "groups.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  requestAnimationFrame(animate);
+};
 
   return (
-    <div className="w-[1920px] h-[1080px] overflow-hidden mx-auto bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-black dark:to-gray-800">
-      <div className="flex flex-row w-full h-full">
+<div
+  className="
+    w-[1920px] h-[1080px] overflow-hidden mx-auto 
+    bg-gradient-to-br from-blue-50 via-white to-blue-100 
+    dark:from-gray-900 dark:via-black dark:to-gray-800 
+    bg-cover bg-center relative
+    shadow-inner shadow-[rgba(255,255,255,0.2)] 
+  "
+  style={{
+    backgroundImage: `url(${backgroundImage})`,
+  }}
+>
+  <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,255,255,0.3),transparent)] animate-spin-slow opacity-20"></div>
+
+  <div className="absolute inset-0 backdrop-blur-sm"></div>
+
+  <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent,rgba(0,0,0,0.5))]"></div>
+      <div className="flex flex-row w-full h-full relative z-10">
         <div className="w-4/5" ref={groupTableRef}>
           <GroupTable groups={groups} groupNames={groupNames} />
         </div>
 
-        <div className="w-1.2/5">
+        <div className="w-1.2/5 relative z-10">
           <div className="flex flex-col items-center justify-center w-full h-full ">
             <div className="relative w-full flex items-center justify-center">
               <WheelCanvas
@@ -284,51 +298,11 @@ const handleSaveImage = () => {
             </div>
 
             <div className="mt-2 p-3 rounded-lg bg-gray-100 dark:bg-gray-800/40 text-gray-700 dark:text-gray-300 text-lg shadow-sm">
-              ทีมที่เหลือ: <b>{teams.length}</b>
+              ทีมที่เหลือ: <b>{teams.length + pendingLocked.length}</b>
             </div>
 
             <div className="flex flex-col items-center justify-center w-full gap-4 mt-8">
-              <Button
-                onClick={handleSpin}
-                disabled={spinning || done || teams.length === 0}
-                className="w-full"
-              >
-                {spinning ? "กำลังสุ่ม..." : "สุ่ม"}
-              </Button>
-              <Button
-                onClick={handleAutoDraw}
-                disabled={spinning || done}
-                className="w-full"
-                variant="outline"
-              >
-                สุ่มอัตโนมัติ
-              </Button>
-              <Button
-                onClick={handleReset}
-                variant="outline"
-                className="w-full text-red-500 border-red-500 hover:bg-red-100 hover:text-red-600 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900/40"
-              >
-                รีเซ็ต
-              </Button>
-
-              {/* ปุ่มบันทึกผล เมื่อจับครบทีม */}
-              {done && (
-                <>
-                  <button
-                    onClick={handleSavePdf}
-                    className="w-full mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                  >
-                    บันทึกผลการจับทีม (PDF)
-                  </button>
-
-                  <button
-                    onClick={handleSaveImage}
-                    className="w-full mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    บันทึกผลการจับทีม (รูปภาพ)
-                  </button>
-                </>
-              )}
+            
             </div>
           </div>
         </div>

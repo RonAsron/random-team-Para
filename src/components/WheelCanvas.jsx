@@ -1,19 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 
 const WheelCanvas = ({ names, spinDegree, onSpin, isSpinning }) => {
   const canvasRef = useRef(null);
 
   // ฟังก์ชันคำนวณ segment index ที่ชนะ (ลูกศรชี้ขวาสุด)
   // หมายเหตุ: ฟังก์ชันนี้ไม่ได้ถูกใช้ใน logic การทำงานหลักของ App.jsx
-  const getWinningIndex = (degree, names) => {
-    if (!names.length) return -1;
-    // normalize มุม 0-360
-    const normalizedDegree = ((degree % 360) + 360) % 360;
-    // offset +90 เพราะวงล้อหมุน offset -90 องศา (radian)
-    const pointerDegree = (normalizedDegree + 90) % 360;
-    const segmentAngle = 360 / names.length;
-    return Math.floor(pointerDegree / segmentAngle) % names.length;
-  };
 
   useEffect(() => {
     const canvas = canvasRef.current;

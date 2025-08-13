@@ -1,6 +1,6 @@
 import React from "react";
 import bgImage from "../assets/bg-1.png";
-
+import logoImage from "../assets/logoPara.png";
 const GroupTable = ({ groups, groupNames }) => {
   const displayGroups = [
     { group: groups[0], name: groupNames[0] },
@@ -14,17 +14,25 @@ const GroupTable = ({ groups, groupNames }) => {
   ];
 
   return (
-<div
-  className="relative w-full h-full min-h-0 flex flex-col items-center justify-start mt-12"
-  style={{
-    backgroundImage: `url(${bgImage})`,
-    backgroundSize: "contain",          // หรือ "cover" ขึ้นกับความต้องการ
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat",
-    backgroundOrigin: "content-box",    // ถ้าต้องการให้พื้นหลังอยู่ในเนื้อที่ของเนื้อหา
-  }}
->
+    <div
+      className="relative w-full h-full min-h-0 flex flex-col items-center justify-start mt-12"
+      style={{
+        // backgroundImage: `url(${bgImage})`,
+        backgroundSize: "contain",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundOrigin: "content-box",
+      }}
+    >
+      <img
+        className="absolute top-[1%] left-1/2 -translate-x-1/2 w-40 h-40"
+        src={logoImage}
+        alt="Logo"
+      />
 
+      <h3 className="absolute font-['Kokoro'] text-white text-[3.25rem] font-bold leading-[2.75rem] right-9 top-[9.4rem]">
+        รุ่นประชาชนทั่วไปชาย
+      </h3>
       <div className="mt-[10vh] mb-6 w-full flex items-center justify-center">
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100vw] md:w-[65vw] md:h-[65vw] rounded-full bg-gradient-to-br from-blue-200/40 via-blue-100/60 to-pink-100/40 dark:from-blue-900/40 dark:via-blue-800/60 dark:to-fuchsia-900/30 blur-2xl opacity-70 animate-pulse" />
         <div className="absolute left-1/3 top-1/4 w-[32vw] h-[32vw] rounded-full bg-gradient-to-tr from-pink-200/30 via-blue-100/20 to-blue-300/20 dark:from-fuchsia-900/20 dark:via-blue-900/20 dark:to-blue-700/10 blur-lg opacity-50 animate-pulse" />
@@ -36,31 +44,41 @@ const GroupTable = ({ groups, groupNames }) => {
           return (
             <div
               key={item.name}
-              className={`flex ${isRightGroup ? "justify-end" : "justify-start"}`}
+              className={`flex ${
+                isRightGroup ? "justify-end" : "justify-start"
+              }`}
             >
               <div className="relative w-[43rem] h-[3.8rem]">
                 <div
                   className="absolute top-[4.5rem] w-[7rem] h-[1.75rem] bg-[#4058A9] blur-sm"
-                  style={isRightGroup ? { right: "0.6rem" } : { left: "0.6rem" }}
+                  style={
+                    isRightGroup ? { right: "0.6rem" } : { left: "0.6rem" }
+                  }
                 ></div>
 
                 <div
                   className="absolute font-['Kokoro'] text-white text-[1.25rem] leading-[2rem] top-[4.5rem]"
-                  style={isRightGroup ? { right: "3.2rem" } : { left: "0.6rem" }}
+                  style={
+                    isRightGroup ? { right: "3.2rem" } : { left: "0.6rem" }
+                  }
                 >
                   GROUP
                 </div>
 
                 <div
                   className="absolute font-['Kokoro'] text-white text-[3.25rem] leading-[2.75rem] top-[3.4rem]"
-                  style={isRightGroup ? { right: "1.0rem" } : { left: "5.3rem" }}
+                  style={
+                    isRightGroup ? { right: "1.0rem" } : { left: "5.3rem" }
+                  }
                 >
                   {item.name}
                 </div>
 
                 <div
                   className="absolute top-[6.4rem] w-[95%] h-[5.1rem] rounded-[1.4rem_0_1.3rem_0] bg-gradient-to-t from-[#00AFEF] to-transparent border border-[#00AFEF]"
-                  style={isRightGroup ? { right: "0.75rem" } : { left: "0.75rem" }}
+                  style={
+                    isRightGroup ? { right: "0.75rem" } : { left: "0.75rem" }
+                  }
                 ></div>
 
                 <div
@@ -76,7 +94,15 @@ const GroupTable = ({ groups, groupNames }) => {
                       key={teamIdx}
                       className="h-[2rem] bg-white rounded-[1rem_0.3rem_0.7rem_0.3rem] flex items-center justify-center p-1 shadow-sm"
                     >
-                      <span className="font-['Kokoro'] text-[0.99rem] leading-[1.5rem] text-center text-black overflow-hidden whitespace-nowrap">
+                      <span
+                        className="font-['Kokoro'] leading-[1.5rem] text-center text-black overflow-hidden whitespace-nowrap"
+                        style={{
+                          fontSize:
+                            (item.group[teamIdx] || "").length > 12
+                              ? "0.75rem" // ถ้ายาวเกิน 12 ตัว ลดฟอนต์
+                              : "1rem", // ปกติ
+                        }}
+                      >
                         {item.group[teamIdx] || "-"}
                       </span>
                     </div>

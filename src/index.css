@@ -3,6 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Kokoro&display=swap');
+body {
+  font-family: 'Kokoro', cursive, sans-serif;
+}
+
 /* Remove or comment out the default Vite styles that might conflict */
 /* 
 :root {

@@ -74,7 +74,6 @@ const GroupDraw = () => {
   const [lastTeam, setLastTeam] = useState(null);
   const [done, setDone] = useState(false);
 
-  // สุ่มทีมทั้งหมดและจัดกลุ่มทันที
   const handleAutoDraw = () => {
     const shuffled = shuffle(teams);
     const newGroups = groupNames.map((_, i) =>
@@ -86,11 +85,9 @@ const GroupDraw = () => {
     setDone(true);
   };
 
-  // หมุนวงล้อเลือกทีละทีม
   const handleSpin = () => {
     if (teams.length === 0 || spinning) return;
     setSpinning(true);
-    // 1. หมุน pre-spin 3-4 รอบแบบเร็วๆ ก่อน
     const preSpinRounds = Math.floor(Math.random() * 2) + 3; // 3-4 รอบ
     const preSpinAngle = 360 * preSpinRounds;
     const preSpinDuration = 800; // ms
@@ -105,14 +102,12 @@ const GroupDraw = () => {
       if (progress < 1) {
         requestAnimationFrame(preSpinAnimate);
       } else {
-        // 2. หลัง pre-spin เสร็จ ค่อยสุ่มทีมและหมุนไปหยุดที่ทีมที่ถูกเลือกจริง
         const winnerIndex = Math.floor(Math.random() * teams.length);
         const minSpins = 6,
           maxSpins = 10;
         const totalSpins =
-          Math.floor(Math.random() * (maxSpins - minSpins + 1)) + minSpins; // 6-10 รอบ
+          Math.floor(Math.random() * (maxSpins - minSpins + 1)) + minSpins;
         const segmentAngle = 360 / teams.length;
-        // pointer อยู่ที่ 0 องศา ต้องหมุนให้ชื่อที่ index winnerIndex ไปอยู่ตรง pointer (clockwise)
         const finalAngle =
           angle +
           360 * totalSpins -
@@ -134,7 +129,6 @@ const GroupDraw = () => {
           if (progress < 1) {
             requestAnimationFrame(animate);
           } else {
-            // หลังหมุนเสร็จ ค่อยสุ่มทีมและจัดกลุ่ม
             const team = teams[winnerIndex];
             const groupIdx = groups.findIndex((g) => g.length < 6);
             if (groupIdx !== -1) {
